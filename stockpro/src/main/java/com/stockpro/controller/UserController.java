@@ -3,6 +3,8 @@ package com.stockpro.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.stockpro.service.EmailService;
@@ -59,5 +61,17 @@ public class UserController {
         } else {
             return new ResponseEntity<>("Invalid OTP", HttpStatus.BAD_REQUEST);
         }
+    }
+    
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, String>> getDashboard(@AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        return userService.getDashboard(username);
+    }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
+        return userService.logout(token);
     }
 }

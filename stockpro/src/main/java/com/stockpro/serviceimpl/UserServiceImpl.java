@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import com.stockpro.model.User;
 import com.stockpro.repository.UserRepository;
 import com.stockpro.service.UserService;
+import com.stockpro.utils.JwtUtil;
 import com.stockpro.utils.StockUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -22,6 +24,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
@@ -49,7 +54,8 @@ public class UserServiceImpl implements UserService {
             if (requestMap.containsKey("email") && requestMap.containsKey("password")) {
                 User user = userRepository.findByEmail(requestMap.get("email"));
                 if (Objects.nonNull(user) && passwordEncoder.matches(requestMap.get("password"), user.getPassword())) {
-                    return StockUtils.getResponseEntity("Login successful", HttpStatus.OK);
+                    String token = jwtUtil.generateToken(user.getEmail());
+                    return ResponseEntity.ok(token);
                 }
                 return StockUtils.getResponseEntity("Invalid email or password", HttpStatus.UNAUTHORIZED);
             }
@@ -68,6 +74,30 @@ public class UserServiceImpl implements UserService {
         } else {
             return StockUtils.getResponseEntity("Invalid credentials", HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @Override
+    public ResponseEntity<Map<String, String>> getDashboard(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            Map<String, String> userDetails = new HashMap<>();
+            userDetails.put("name", user.getName());
+            userDetails.put("contactNumber", user.getContactNumber());
+            userDetails.put("email", user.getEmail());
+            return ResponseEntity.ok(userDetails);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+
+
+
+    @Override
+    public ResponseEntity<String> logout(String token) {
+        // Here you can implement token blacklisting if needed
+        return ResponseEntity.ok("Logged out successfully");
     }
 
     private boolean validateSignUpMap(Map<String, String> requestMap) {
