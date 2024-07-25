@@ -1,18 +1,20 @@
 package com.stockpro.serviceimpl;
 
+import com.stockpro.model.Store;
+import com.stockpro.model.User;
+import com.stockpro.repository.StoreRepository;
+import com.stockpro.repository.UserRepository;
+import com.stockpro.service.UserService;
+import com.stockpro.utils.JwtUtil;
+import com.stockpro.utils.StockUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.stockpro.model.User;
-import com.stockpro.repository.UserRepository;
-import com.stockpro.service.UserService;
-import com.stockpro.utils.JwtUtil;
-import com.stockpro.utils.StockUtils;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -21,6 +23,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private StoreRepository storeRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -34,7 +39,14 @@ public class UserServiceImpl implements UserService {
             if (validateSignUpMap(requestMap)) {
                 User user = userRepository.findByEmail(requestMap.get("email"));
                 if (Objects.isNull(user)) {
-                    userRepository.save(getUserFromMap(requestMap));
+                    // Create a new store
+                    Store store = new Store();
+                    store.setName(requestMap.get("storeName"));
+                    store.setAddress(requestMap.get("storeAddress"));
+                    store = storeRepository.save(store);
+
+                    // Create a new user and associate with the store
+                    userRepository.save(getUserFromMap(requestMap, "ADMIN", store));
                     return StockUtils.getResponseEntity("Successfully Registered", HttpStatus.OK);
                 } else {
                     return StockUtils.getResponseEntity("Email already exists", HttpStatus.BAD_REQUEST);
@@ -46,6 +58,59 @@ public class UserServiceImpl implements UserService {
             ex.printStackTrace();
         }
         return StockUtils.getResponseEntity("Something Went Wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> addUser(Map<String, String> requestMap, String adminEmail) {
+        try {
+            if (validateAddUserMap(requestMap)) {
+                User adminUser = userRepository.findByEmail(adminEmail);
+                if (adminUser != null && adminUser.getRole().equals("ADMIN")) {
+                    User user = userRepository.findByEmail(requestMap.get("email"));
+                    if (Objects.isNull(user)) {
+                        userRepository.save(getUserFromMap(requestMap, requestMap.get("role"), adminUser.getStore()));
+                        return StockUtils.getResponseEntity("User added successfully", HttpStatus.OK);
+                    } else {
+                        return StockUtils.getResponseEntity("Email already exists", HttpStatus.BAD_REQUEST);
+                    }
+                } else {
+                    return StockUtils.getResponseEntity("Not Authorised to create user", HttpStatus.UNAUTHORIZED);
+                }
+            } else {
+                return StockUtils.getResponseEntity("Invalid Data", HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return StockUtils.getResponseEntity("Something Went Wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private User getUserFromMap(Map<String, String> requestMap, String role, Store store) {
+        User user = new User();
+        user.setName(requestMap.get("name"));
+        user.setContactNumber(requestMap.get("contactNumber"));
+        user.setEmail(requestMap.get("email"));
+        user.setPassword(passwordEncoder.encode(requestMap.get("password")));
+        user.setRole(role);
+        user.setStore(store);
+        return user;
+    }
+
+    private boolean validateSignUpMap(Map<String, String> requestMap) {
+        return requestMap.containsKey("name") &&
+               requestMap.containsKey("contactNumber") &&
+               requestMap.containsKey("email") &&
+               requestMap.containsKey("password") &&
+               requestMap.containsKey("storeName") &&
+               requestMap.containsKey("storeAddress");
+    }
+
+    private boolean validateAddUserMap(Map<String, String> requestMap) {
+        return requestMap.containsKey("name") &&
+               requestMap.containsKey("contactNumber") &&
+               requestMap.containsKey("email") &&
+               requestMap.containsKey("password") &&
+               requestMap.containsKey("role");
     }
 
     @Override
@@ -84,15 +149,12 @@ public class UserServiceImpl implements UserService {
             userDetails.put("name", user.getName());
             userDetails.put("contactNumber", user.getContactNumber());
             userDetails.put("email", user.getEmail());
+            userDetails.put("role", user.getRole());
             return ResponseEntity.ok(userDetails);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-
-
-
 
     @Override
     public ResponseEntity<String> logout(String token) {
@@ -100,20 +162,9 @@ public class UserServiceImpl implements UserService {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    private boolean validateSignUpMap(Map<String, String> requestMap) {
-        return requestMap.containsKey("name") &&
-               requestMap.containsKey("contactNumber") &&
-               requestMap.containsKey("email") &&
-               requestMap.containsKey("password");
-    }
-
-    private User getUserFromMap(Map<String, String> requestMap) {
-        User user = new User();
-        user.setName(requestMap.get("name"));
-        user.setContactNumber(requestMap.get("contactNumber"));
-        user.setEmail(requestMap.get("email"));
-        user.setPassword(passwordEncoder.encode(requestMap.get("password")));
-        user.setRole("USER");
-        return user;
+    @Override
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 }

@@ -1,5 +1,8 @@
 package com.stockpro.controller;
 
+import com.stockpro.model.User;
+import com.stockpro.service.EmailService;
+import com.stockpro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,10 +10,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import com.stockpro.service.EmailService;
-import com.stockpro.service.UserService;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -62,16 +63,26 @@ public class UserController {
             return new ResponseEntity<>("Invalid OTP", HttpStatus.BAD_REQUEST);
         }
     }
-    
+
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, String>> getDashboard(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         return userService.getDashboard(username);
     }
 
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
         return userService.logout(token);
+    }
+
+    @PostMapping("/add-user")
+    public ResponseEntity<String> addUser(@RequestBody Map<String, String> requestMap, @AuthenticationPrincipal UserDetails userDetails) {
+        String adminEmail = userDetails.getUsername();
+        return userService.addUser(requestMap, adminEmail);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return userService.getAllUsers();
     }
 }

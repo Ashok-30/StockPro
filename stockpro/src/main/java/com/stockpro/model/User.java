@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class User {
@@ -51,6 +53,15 @@ public class User {
     private String email;
     private String password;
     private String role;
+    @ManyToOne
+    @JoinColumn(name = "store_id")
+    private Store store;
+	public Store getStore() {
+		return store;
+	}
+	public void setStore(Store store) {
+		this.store = store;
+	}
 
     
 }
