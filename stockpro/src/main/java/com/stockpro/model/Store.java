@@ -26,9 +26,17 @@ public class Store {
 		return address;
 	}
 
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public Long getId() {
+		return id;
+	}
+
 	public void setAddress(String address) {
 		this.address = address;
 	}
+	
 
    
 }

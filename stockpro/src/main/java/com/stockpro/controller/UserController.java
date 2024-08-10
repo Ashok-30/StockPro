@@ -1,8 +1,11 @@
 package com.stockpro.controller;
 
+
+
 import com.stockpro.model.User;
 import com.stockpro.service.EmailService;
 import com.stockpro.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,13 +17,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:4200")
+
 public class UserController {
+	 private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
+
 
     @Autowired
     private EmailService emailService;
+
 
     @Autowired
     private UserService userService;
@@ -80,9 +91,39 @@ public class UserController {
         String adminEmail = userDetails.getUsername();
         return userService.addUser(requestMap, adminEmail);
     }
-
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return userService.getAllUsers();
+    @GetMapping("/users/by-store")
+    public ResponseEntity<List<User>> getUsersByStoreId(@AuthenticationPrincipal UserDetails userDetails) {
+        User adminUser = userService.findByEmail(userDetails.getUsername());
+        if (adminUser != null) {
+            Long storeId = adminUser.getStore().getId();
+            return userService.getUsersByStoreIdAndRoleNotAdmin(storeId);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
+    @PutMapping("/users/{userId}")
+    public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User userDetails) {
+        logger.info("Updating user with ID: {}", userId);
+        User updatedUser = userService.updateUser(userId, userDetails);
+        if (updatedUser != null) {
+            logger.info("User updated successfully: {}", updatedUser);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } else {
+            logger.warn("User not found with ID: {}", userId);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
+        boolean isDeleted = userService.deleteUser(userId);
+        if (isDeleted) {
+            return new ResponseEntity<>("User deleted successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+    
+   
 }

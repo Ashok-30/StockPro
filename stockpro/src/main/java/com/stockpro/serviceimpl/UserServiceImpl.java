@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -39,13 +41,11 @@ public class UserServiceImpl implements UserService {
             if (validateSignUpMap(requestMap)) {
                 User user = userRepository.findByEmail(requestMap.get("email"));
                 if (Objects.isNull(user)) {
-                    // Create a new store
                     Store store = new Store();
                     store.setName(requestMap.get("storeName"));
                     store.setAddress(requestMap.get("storeAddress"));
                     store = storeRepository.save(store);
 
-                    // Create a new user and associate with the store
                     userRepository.save(getUserFromMap(requestMap, "ADMIN", store));
                     return StockUtils.getResponseEntity("Successfully Registered", HttpStatus.OK);
                 } else {
@@ -150,6 +150,7 @@ public class UserServiceImpl implements UserService {
             userDetails.put("contactNumber", user.getContactNumber());
             userDetails.put("email", user.getEmail());
             userDetails.put("role", user.getRole());
+            userDetails.put("storeId", user.getStore().getId().toString());
             return ResponseEntity.ok(userDetails);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -158,13 +159,42 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<String> logout(String token) {
-        // Here you can implement token blacklisting if needed
         return ResponseEntity.ok("Logged out successfully");
     }
-
     @Override
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAll();
+    public ResponseEntity<List<User>> getUsersByStoreIdAndRoleNotAdmin(Long storeId) {
+        List<User> users = userRepository.findByStoreIdAndRoleNot(storeId, "ADMIN");
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+    @Override
+    public User updateUser(Long userId, User userDetails) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setName(userDetails.getName());
+            user.setEmail(userDetails.getEmail());
+            user.setRole(userDetails.getRole());
+            user.setContactNumber(userDetails.getContactNumber());
+            return userRepository.save(user);
+        } else {
+            return null;
+        }
+    }
+    
+    @Override
+    public boolean deleteUser(Long userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            userRepository.delete(optionalUser.get());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+ 
 }
