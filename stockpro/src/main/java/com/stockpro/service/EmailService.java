@@ -5,6 +5,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+
+
 import java.util.Random;
 
 @Service
@@ -26,4 +28,14 @@ public class EmailService {
         message.setText("Your OTP is: " + otp);
         mailSender.send(message);
     }
+    public void sendAdminNotification(String toEmail, String productName) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Product Inventory Alert");
+        message.setText("Attention: The inventory for " + productName + " has reached or fallen below the minimum quantity.");
+        mailSender.send(message);
+    }
+  
+   
+   
 }

@@ -17,4 +17,5 @@ public interface ProductService {
     ResponseEntity<String> deleteProduct(Long id);
     ResponseEntity<List<Product>> getProductsBelowMinimum();
     ResponseEntity<String> sellProducts(List<ProductSaleRequest> saleRequests);
+    ResponseEntity<List<Product>> searchProductsByName(String name);
 }

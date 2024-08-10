@@ -122,6 +122,22 @@ public class UserController {
             return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
         }
     }
+    @GetMapping("/users/profile")
+    public ResponseEntity<User> getAuthenticatedUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return userService.getUserByEmail(userDetails.getUsername());
+    }
+    @GetMapping("/admin-email")
+    public ResponseEntity<String> getAdminEmail(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        if (user != null) {
+            return userService.getAdminEmailByStoreId(user.getStore().getId());
+        } else {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
 
 
     

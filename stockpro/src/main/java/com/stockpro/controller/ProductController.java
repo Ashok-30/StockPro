@@ -61,4 +61,8 @@ public class ProductController {
     public ResponseEntity<String> sellProducts(@RequestBody List<ProductSaleRequest> saleRequests) {
         return productService.sellProducts(saleRequests);
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> searchProductsByName(@RequestParam String name) {
+        return productService.searchProductsByName(name);
+    }
 }

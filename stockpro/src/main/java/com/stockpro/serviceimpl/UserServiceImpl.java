@@ -195,6 +195,23 @@ public class UserServiceImpl implements UserService {
             return false;
         }
     }
-
- 
+    @Override
+    public ResponseEntity<User> getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @Override
+    public ResponseEntity<String> getAdminEmailByStoreId(Long storeId) {
+        List<User> users = userRepository.findByStoreIdAndRole(storeId, "ADMIN");
+        if (users != null && !users.isEmpty()) {
+            return ResponseEntity.ok(users.get(0).getEmail());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
 }

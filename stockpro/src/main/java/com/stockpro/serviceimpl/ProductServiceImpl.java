@@ -3,7 +3,10 @@ package com.stockpro.serviceimpl;
 import com.stockpro.model.Product;
 import com.stockpro.model.ProductSaleRequest;
 import com.stockpro.repository.ProductRepository;
+import com.stockpro.service.EmailService;
 import com.stockpro.service.ProductService;
+import com.stockpro.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +23,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private EmailService emailService;
+   
 
     @Override
     public ResponseEntity<Page<Product>> getAllProducts(Long storeId, Pageable pageable) {
@@ -82,6 +90,14 @@ public class ProductServiceImpl implements ProductService {
             product.setBrand(productDetails.getBrand());
             
             productRepository.save(product);
+            if (product.getQuantity() <= product.getMinimumQuantity()) {
+                ResponseEntity<String> adminEmailResponse = userService.getAdminEmailByStoreId(product.getStoreId());
+                if (adminEmailResponse.getStatusCode() == HttpStatus.OK && adminEmailResponse.getBody() != null) {
+                    emailService.sendAdminNotification(adminEmailResponse.getBody(), product.getName());
+                }
+            }
+           
+           
             return new ResponseEntity<>("Product updated successfully", HttpStatus.OK);
         }
         return new ResponseEntity<>("Product not found", HttpStatus.NOT_FOUND);
@@ -113,9 +129,18 @@ public class ProductServiceImpl implements ProductService {
             Optional<Product> optionalProduct = productRepository.findById(request.getProductId());
             if (optionalProduct.isPresent()) {
                 Product product = optionalProduct.get();
-                if (product.getQuantity() >= request.getQuantity()) {
-                    product.setQuantity(product.getQuantity() - request.getQuantity());
+                int newQuantity = product.getQuantity() - request.getQuantity();
+
+                if (newQuantity >= 0) {
+                    product.setQuantity(newQuantity);
                     productRepository.save(product);
+
+                    if (newQuantity <= product.getMinimumQuantity()) {
+                        ResponseEntity<String> adminEmailResponse = userService.getAdminEmailByStoreId(product.getStoreId());
+                        if (adminEmailResponse.getStatusCode() == HttpStatus.OK && adminEmailResponse.getBody() != null) {
+                            emailService.sendAdminNotification(adminEmailResponse.getBody(), product.getName());
+                        }
+                    }
                 } else {
                     return new ResponseEntity<>("Insufficient stock for product ID: " + request.getProductId(), HttpStatus.BAD_REQUEST);
                 }
@@ -125,4 +150,16 @@ public class ProductServiceImpl implements ProductService {
         }
         return new ResponseEntity<>("Products sold successfully", HttpStatus.OK);
     }
+
+
+    @Override
+    public ResponseEntity<List<Product>> searchProductsByName(String name) {
+        List<Product> products = productRepository.findByNameContainingIgnoreCase(name);
+        if (products.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(products, HttpStatus.OK);
+    }
+    
+    
 }

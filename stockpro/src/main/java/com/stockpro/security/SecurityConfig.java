@@ -31,7 +31,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .authorizeRequests()
                 .requestMatchers("/auth/signup", "/auth/login", "/auth/generate-otp", "/auth/verify-otp", "/auth/verify-credentials","/orders/**").permitAll()
                 .requestMatchers("/auth/logout", "/auth/dashboard", "/auth/users/**").authenticated()
-                .requestMatchers("/products/**","/products/sell-products/**").authenticated() 
+                .requestMatchers("/products/search","/products/sell-products/**","/products/**").authenticated() 
                 .requestMatchers("/orders/**").authenticated()
                 .anyRequest().authenticated()
                 .and()

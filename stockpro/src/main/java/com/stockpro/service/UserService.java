@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 
+
 public interface UserService {
     ResponseEntity<String> signUp(Map<String, String> requestMap);
     ResponseEntity<String> login(Map<String, String> requestMap);
@@ -16,11 +17,10 @@ public interface UserService {
     ResponseEntity<String> logout(String token);
     
     ResponseEntity<String> addUser(Map<String, String> requestMap, String adminEmail);
-    
+    ResponseEntity<User> getUserByEmail(String email);
     ResponseEntity<List<User>> getUsersByStoreIdAndRoleNotAdmin(Long storeId);
     User findByEmail(String email);
     User updateUser(Long userId, User userDetails);
     boolean deleteUser(Long userId);
-    
-   
+    ResponseEntity<String>getAdminEmailByStoreId(Long storeId);
 }
