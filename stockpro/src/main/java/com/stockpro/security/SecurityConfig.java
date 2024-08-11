@@ -33,6 +33,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .requestMatchers("/auth/logout", "/auth/dashboard", "/auth/users/**").authenticated()
                 .requestMatchers("/products/search","/products/sell-products/**","/products/**").authenticated() 
                 .requestMatchers("/orders/**").authenticated()
+                .requestMatchers("/purchase/**").authenticated()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

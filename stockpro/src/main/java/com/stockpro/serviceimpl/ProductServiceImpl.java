@@ -2,9 +2,11 @@ package com.stockpro.serviceimpl;
 
 import com.stockpro.model.Product;
 import com.stockpro.model.ProductSaleRequest;
+import com.stockpro.model.Purchase;
 import com.stockpro.repository.ProductRepository;
 import com.stockpro.service.EmailService;
 import com.stockpro.service.ProductService;
+import com.stockpro.service.PurchaseService;
 import com.stockpro.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,8 @@ public class ProductServiceImpl implements ProductService {
     private UserService userService;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private PurchaseService purchaseService;
    
 
     @Override
@@ -90,7 +94,15 @@ public class ProductServiceImpl implements ProductService {
             product.setBrand(productDetails.getBrand());
             
             productRepository.save(product);
+           
             if (product.getQuantity() <= product.getMinimumQuantity()) {
+            	Purchase purchase = new Purchase();
+                purchase.setName(product.getName());
+                purchase.setPrice(product.getPrice());
+                purchase.setStoreId(product.getStoreId());
+                purchase.setSupplier(product.getSupplier());
+                purchase.setQuantity(product.getQuantity());
+                purchaseService.addPurchase(purchase);
                 ResponseEntity<String> adminEmailResponse = userService.getAdminEmailByStoreId(product.getStoreId());
                 if (adminEmailResponse.getStatusCode() == HttpStatus.OK && adminEmailResponse.getBody() != null) {
                     emailService.sendAdminNotification(adminEmailResponse.getBody(), product.getName());
@@ -136,6 +148,13 @@ public class ProductServiceImpl implements ProductService {
                     productRepository.save(product);
 
                     if (newQuantity <= product.getMinimumQuantity()) {
+                    	Purchase purchase = new Purchase();
+                        purchase.setName(product.getName());
+                        purchase.setPrice(product.getPrice());
+                        purchase.setStoreId(product.getStoreId());
+                        purchase.setSupplier(product.getSupplier());
+                        purchase.setQuantity(product.getQuantity());
+                        purchaseService.addPurchase(purchase);
                         ResponseEntity<String> adminEmailResponse = userService.getAdminEmailByStoreId(product.getStoreId());
                         if (adminEmailResponse.getStatusCode() == HttpStatus.OK && adminEmailResponse.getBody() != null) {
                             emailService.sendAdminNotification(adminEmailResponse.getBody(), product.getName());
