@@ -4,6 +4,7 @@ import com.stockpro.model.Store;
 import com.stockpro.model.User;
 import com.stockpro.repository.StoreRepository;
 import com.stockpro.repository.UserRepository;
+import com.stockpro.service.FileStorageService;
 import com.stockpro.service.UserService;
 import com.stockpro.utils.JwtUtil;
 import com.stockpro.utils.StockUtils;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +33,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -169,6 +173,27 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+    
+    @Override
+    public User updateUserWithPhoto(Long userId, User userDetails, MultipartFile photo) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setName(userDetails.getName());
+            user.setEmail(userDetails.getEmail());
+            user.setRole(userDetails.getRole());
+            user.setContactNumber(userDetails.getContactNumber());
+
+            if (photo != null && !photo.isEmpty()) {
+                String fileName = fileStorageService.storeFile(photo);
+                user.setProfilePhotoUrl(fileName);
+            }
+
+            return userRepository.save(user);
+        } else {
+            return null;
+        }
     }
     @Override
     public User updateUser(Long userId, User userDetails) {

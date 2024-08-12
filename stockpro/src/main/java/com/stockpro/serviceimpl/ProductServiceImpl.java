@@ -9,6 +9,10 @@ import com.stockpro.service.ProductService;
 import com.stockpro.service.PurchaseService;
 import com.stockpro.service.UserService;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -178,6 +186,41 @@ public class ProductServiceImpl implements ProductService {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(products, HttpStatus.OK);
+    }
+    @Override
+    public ResponseEntity<String> uploadAndAddProducts(InputStream file, Long storeId) {
+        try (Workbook workbook = WorkbookFactory.create(file)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+            while (rows.hasNext()) {
+                Row currentRow = rows.next();
+                if (currentRow.getRowNum() != 0) { // Skip header row
+                    try {
+                        Product product = new Product();
+                        product.setName(currentRow.getCell(0).getStringCellValue());
+                        product.setDescription(currentRow.getCell(1).getStringCellValue());
+                        product.setCategory(currentRow.getCell(2).getStringCellValue());
+                        product.setQuantity((int) currentRow.getCell(3).getNumericCellValue());
+                        product.setMinimumQuantity((int) currentRow.getCell(4).getNumericCellValue());
+                        product.setPrice(BigDecimal.valueOf(currentRow.getCell(5).getNumericCellValue()));
+                        product.setSupplier(currentRow.getCell(6).getStringCellValue());
+                        product.setAttribute(currentRow.getCell(7).getStringCellValue());
+                        product.setBrand(currentRow.getCell(8).getStringCellValue());
+                        product.setStoreId(storeId);
+
+                        ResponseEntity<String> response = addProduct(product, storeId);
+                        if (!response.getStatusCode().is2xxSuccessful()) {
+                            return new ResponseEntity<>("Failed to add/update some products", HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
+                    } catch (Exception e) {
+                        return new ResponseEntity<>("Error processing row " + currentRow.getRowNum() + ": " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return new ResponseEntity<>("Failed to read Excel file: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("All products added/updated successfully", HttpStatus.OK);
     }
     
     

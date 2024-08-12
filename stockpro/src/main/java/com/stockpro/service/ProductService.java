@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import java.io.InputStream;
 import java.util.List;
 
 public interface ProductService {
@@ -18,4 +19,6 @@ public interface ProductService {
     ResponseEntity<List<Product>> getProductsBelowMinimum();
     ResponseEntity<String> sellProducts(List<ProductSaleRequest> saleRequests);
     ResponseEntity<List<Product>> searchProductsByName(String name);
+    
+    ResponseEntity<String> uploadAndAddProducts(InputStream file, Long storeId);
 }

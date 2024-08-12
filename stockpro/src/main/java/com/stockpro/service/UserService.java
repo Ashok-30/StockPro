@@ -1,6 +1,7 @@
 package com.stockpro.service;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.stockpro.model.User;
 
@@ -23,4 +24,5 @@ public interface UserService {
     User updateUser(Long userId, User userDetails);
     boolean deleteUser(Long userId);
     ResponseEntity<String>getAdminEmailByStoreId(Long storeId);
+    User updateUserWithPhoto(Long userId, User userDetails, MultipartFile photo);
 }

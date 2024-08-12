@@ -2,6 +2,9 @@ package com.stockpro.controller;
 
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockpro.model.User;
 import com.stockpro.service.EmailService;
 import com.stockpro.service.UserService;
@@ -12,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +106,31 @@ public class UserController {
         }
     }
     @PutMapping("/users/{userId}")
+    public ResponseEntity<User> updateUser(
+            @PathVariable Long userId,
+            @RequestParam("user") String userStr,
+            @RequestParam("file") MultipartFile file) {
+        User userDetails = null;
+		try {
+			userDetails = new ObjectMapper().readValue(userStr, User.class);
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        logger.info("Updating user with ID: {}", userId);
+        User updatedUser = userService.updateUserWithPhoto(userId, userDetails, file);
+        if (updatedUser != null) {
+            logger.info("User updated successfully: {}", updatedUser);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } else {
+            logger.warn("User not found with ID: {}", userId);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    @PutMapping("/admin/{userId}")
     public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User userDetails) {
         logger.info("Updating user with ID: {}", userId);
         User updatedUser = userService.updateUser(userId, userDetails);
@@ -137,9 +166,5 @@ public class UserController {
         } else {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-    }
-
-
-    
-   
+    }  
 }

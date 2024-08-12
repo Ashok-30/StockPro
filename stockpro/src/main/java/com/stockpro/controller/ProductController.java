@@ -7,11 +7,12 @@ import com.stockpro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -65,4 +66,18 @@ public class ProductController {
     public ResponseEntity<List<Product>> searchProductsByName(@RequestParam String name) {
         return productService.searchProductsByName(name);
     }
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) {
+        if (!file.isEmpty()) {
+            try {
+                Long storeId = userService.findByEmail(userDetails.getUsername()).getStore().getId();
+                return productService.uploadAndAddProducts(file.getInputStream(), storeId);
+            } catch (Exception e) {
+                return new ResponseEntity<>("Failed to process file: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            return new ResponseEntity<>("Please upload a non-empty Excel file.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

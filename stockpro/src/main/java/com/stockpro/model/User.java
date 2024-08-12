@@ -12,6 +12,12 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
+    private String contactNumber;
+    private String email;
+    private String password;
+    private String role;
+    private String profilePhotoUrl;
     public Long getId() {
 		return id;
 	}
@@ -48,11 +54,7 @@ public class User {
 	public void setRole(String role) {
 		this.role = role;
 	}
-	private String name;
-    private String contactNumber;
-    private String email;
-    private String password;
-    private String role;
+	
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
@@ -61,6 +63,12 @@ public class User {
 	}
 	public void setStore(Store store) {
 		this.store = store;
+	}
+	public String getProfilePhotoUrl() {
+		return profilePhotoUrl;
+	}
+	public void setProfilePhotoUrl(String profilePhotoUrl) {
+		this.profilePhotoUrl = profilePhotoUrl;
 	}
 
     
