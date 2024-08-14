@@ -7,9 +7,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockpro.model.User;
 import com.stockpro.service.EmailService;
+import com.stockpro.service.FileStorageService;
 import com.stockpro.service.UserService;
 
+
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,6 +43,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private FileStorageService fileStorageService;
 
     private Map<String, String> otpStorage = new HashMap<>();
 
@@ -129,6 +136,13 @@ public class UserController {
             logger.warn("User not found with ID: {}", userId);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+    @GetMapping("/uploads/{filename:.+}")
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+        Resource resource = fileStorageService.loadFileAsResource(filename);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
     @PutMapping("/admin/{userId}")
     public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User userDetails) {
