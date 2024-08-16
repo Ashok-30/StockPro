@@ -1,5 +1,9 @@
 package com.stockpro.model;
 
+import java.time.LocalDate;
+
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +22,18 @@ public class User {
     private String password;
     private String role;
     private String profilePhotoUrl;
+    @Column(name = "created_at", nullable = false)
+    private LocalDate createdAt;
+
+    // Getters and Setters
+
+    public LocalDate getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
+    }
     public Long getId() {
 		return id;
 	}

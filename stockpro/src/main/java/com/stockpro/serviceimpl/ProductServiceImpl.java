@@ -134,8 +134,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ResponseEntity<List<Product>> getProductsBelowMinimum() {
-        List<Product> products = productRepository.findByQuantityLessThanEqual(5); 
+    public ResponseEntity<List<Product>> getProductsBelowMinimum(Long storeId) {
+        List<Product> products = productRepository.findProductsBelowMinimum(storeId);
         if (products.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }

@@ -16,9 +16,10 @@ public interface ProductService {
     ResponseEntity<String> addProduct(Product product, Long storeId); 
     ResponseEntity<String> updateProduct(Long id, Product productDetails);
     ResponseEntity<String> deleteProduct(Long id);
-    ResponseEntity<List<Product>> getProductsBelowMinimum();
+    ResponseEntity<List<Product>> getProductsBelowMinimum(Long storeId);
     ResponseEntity<String> sellProducts(List<ProductSaleRequest> saleRequests);
     ResponseEntity<List<Product>> searchProductsByName(String name);
     
     ResponseEntity<String> uploadAndAddProducts(InputStream file, Long storeId);
+    
 }

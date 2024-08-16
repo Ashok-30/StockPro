@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(requestMap.get("password")));
         user.setRole(role);
         user.setStore(store);
+        user.setCreatedAt(LocalDate.now());
         return user;
     }
 
@@ -238,5 +240,54 @@ public class UserServiceImpl implements UserService {
             return ResponseEntity.notFound().build();
         }
     }
-    
+ // In UserServiceImpl.java
+    @Override
+    public ResponseEntity<Integer> countUsersByStoreId(Long storeId) {
+        int userCount = userRepository.countByStoreId(storeId);
+        return ResponseEntity.ok(userCount);
+    }
+ // In UserServiceImpl.java
+    @Override
+    public ResponseEntity<List<Map<String, Object>>> analyzeUserGrowthByStoreId(Long storeId) {
+        try {
+            List<Map<String, Object>> monthlyCounts = userRepository.countUsersByMonthAndYear(storeId);
+            if (monthlyCounts.size() > 1) {
+                for (int i = 0; i < monthlyCounts.size() - 1; i++) {
+                    Long currentMonthCount = ((Number) monthlyCounts.get(i).get("count")).longValue();
+                    Long previousMonthCount = ((Number) monthlyCounts.get(i + 1).get("count")).longValue();
+                    
+                    // Calculate percentage growth
+                    double growth;
+                    String trend;
+                    if (previousMonthCount == 0) {
+                        if (currentMonthCount > 0) {
+                            growth = 100; // Indicates new users started from zero
+                            trend = "Increased";
+                        } else {
+                            growth = 0; // No change if both are zero
+                            trend = "Stable";
+                        }
+                    } else {
+                        growth = ((double) (currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
+                        if (growth > 0) {
+                            trend = "Increased";
+                        } else if (growth < 0) {
+                            trend = "Decreased";
+                        } else {
+                            trend = "Stable";
+                        }
+                    }
+                    monthlyCounts.get(i).put("growthPercentage", growth);
+                    monthlyCounts.get(i).put("trend", trend);
+                }
+            }
+            return ResponseEntity.ok(monthlyCounts);
+        } catch (Exception e) {
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
 }

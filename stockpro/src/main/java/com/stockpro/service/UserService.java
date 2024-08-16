@@ -25,4 +25,11 @@ public interface UserService {
     boolean deleteUser(Long userId);
     ResponseEntity<String>getAdminEmailByStoreId(Long storeId);
     User updateUserWithPhoto(Long userId, User userDetails, MultipartFile photo);
+
+ // In UserService.java
+    ResponseEntity<Integer> countUsersByStoreId(Long storeId);
+    
+    ResponseEntity<List<Map<String, Object>>> analyzeUserGrowthByStoreId(Long storeId);
+
+
 }

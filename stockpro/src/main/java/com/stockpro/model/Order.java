@@ -2,10 +2,19 @@ package com.stockpro.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime; // Import LocalDateTime
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "orders")
 public class Order {
+	@ManyToMany
+    @JoinTable(
+        name = "order_product",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private Set<Product> products = new HashSet<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
@@ -22,9 +31,18 @@ public class Order {
     @Column(name = "total_amount", nullable = false)
     private Double totalAmount;
 
-    @Column(name = "order_datetime", nullable = true)
+    @Column(name = "order_date", nullable = true)
     private LocalDateTime orderDateTime;
+    @Column(name = "store_id", nullable = false)
+    private Long storeId;
 
+    public Long getStoreId() {
+        return storeId;
+    }
+
+    public void setStoreId(Long storeId) {
+        this.storeId = storeId;
+    }
 
     // Getters and setters
     public Long getOrderId() {

@@ -11,7 +11,6 @@ import com.stockpro.service.FileStorageService;
 import com.stockpro.service.UserService;
 
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -24,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +46,7 @@ public class UserController {
     
     @Autowired
     private FileStorageService fileStorageService;
+   
 
     private Map<String, String> otpStorage = new HashMap<>();
 
@@ -180,5 +181,31 @@ public class UserController {
         } else {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-    }  
+    }
+
+
+//In UserController.java
+@GetMapping("/users/count")
+public ResponseEntity<Integer> getUserCount(@AuthenticationPrincipal UserDetails userDetails) {
+ User user = userService.findByEmail(userDetails.getUsername());
+ if (user != null) {
+     Long storeId = user.getStore().getId();
+     return userService.countUsersByStoreId(storeId);
+ } else {
+     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+ }
+}
+
+@GetMapping("/users/growth")
+public ResponseEntity<List<Map<String, Object>>> getUserGrowth(@AuthenticationPrincipal UserDetails userDetails) {
+    User user = userService.findByEmail(userDetails.getUsername());
+    if (user != null ) {
+        Long storeId = user.getStore().getId();
+        return userService.analyzeUserGrowthByStoreId(storeId);
+    } else {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+}
+
+
 }

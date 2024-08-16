@@ -54,8 +54,9 @@ public class ProductController {
     }
 
     @GetMapping("/below-minimum")
-    public ResponseEntity<List<Product>> getProductsBelowMinimum() {
-        return productService.getProductsBelowMinimum();
+    public ResponseEntity<List<Product>> getProductsBelowMinimum(@AuthenticationPrincipal UserDetails userDetails) {
+        Long storeId = userService.findByEmail(userDetails.getUsername()).getStore().getId();
+        return productService.getProductsBelowMinimum(storeId);
     }
     
     @PutMapping("/sell-products")
