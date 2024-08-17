@@ -33,7 +33,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .requestMatchers("/auth/logout", "/auth/dashboard","/auth/users/upload-profile-photo", "/auth/users/**","/auth/admin/**").authenticated()
                 .requestMatchers("/products/search","/products/sell-products/**","/products/**","/products/upload").authenticated() 
                 .requestMatchers("/orders/**").authenticated()
-                .requestMatchers("/purchase/**").authenticated()
+                .requestMatchers("/purchase/**","/api/sales/**", "/api/forecast/**").authenticated()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
